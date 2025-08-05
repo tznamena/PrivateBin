@@ -51,53 +51,53 @@ test-php: ## Run PHP unit tests.
 
 # Docker Development Targets
 docker-build: ## Build the development Docker image
-	docker compose build privatebin-dev
+	docker compose -f docker/docker-compose.yml build privatebin-dev
 
 docker-dev: ## Start development environment with live reload
-	docker compose up -d
+	docker compose -f docker/docker-compose.yml up -d
 	@echo "PrivateBin development environment started!"
 	@echo "Access the application at: http://localhost:8080"
 	@echo "Database admin (Adminer) at: http://localhost:8081"
 	@echo "MinIO console at: http://localhost:9001"
 
 docker-test: ## Run all tests in Docker container
-	docker compose exec privatebin-dev make test
+	docker compose -f docker/docker-compose.yml exec privatebin-dev make test
 
 docker-test-php: ## Run PHP unit tests in Docker container
-	docker compose exec privatebin-dev make test-php
+	docker compose -f docker/docker-compose.yml exec privatebin-dev make test-php
 
 docker-test-js: ## Run JavaScript unit tests in Docker container
-	docker compose exec privatebin-dev make test-js
+	docker compose -f docker/docker-compose.yml exec privatebin-dev make test-js
 
 docker-coverage: ## Generate coverage reports in Docker container
-	docker compose exec privatebin-dev make coverage
+	docker compose -f docker/docker-compose.yml exec privatebin-dev make coverage
 
 docker-shell: ## Open shell in running development container
-	docker compose exec privatebin-dev bash
+	docker compose -f docker/docker-compose.yml exec privatebin-dev bash
 
 docker-logs: ## Show logs from development containers
-	timeout 30s docker compose logs -f || docker compose logs --tail 50
+	timeout 30s docker compose -f docker/docker-compose.yml logs -f || docker compose -f docker/docker-compose.yml logs --tail 50
 
 docker-stop: ## Stop development environment
-	docker compose down
+	docker compose -f docker/docker-compose.yml down
 
 docker-restart: ## Restart development environment
-	docker compose restart privatebin-dev
+	docker compose -f docker/docker-compose.yml restart privatebin-dev
 
 docker-clean: ## Clean up Docker containers, images and volumes
-	docker compose down -v --rmi all
+	docker compose -f docker/docker-compose.yml down -v --rmi all
 	docker system prune -f
 
 docker-prod: ## Build and start production environment
-	docker compose -f docker-compose.prod.yml up -d --build
+	docker compose -f docker/docker-compose.prod.yml up -d --build
 	@echo "PrivateBin production environment started!"
 	@echo "Access the application at: http://localhost"
 
 docker-prod-stop: ## Stop production environment
-	docker compose -f docker-compose.prod.yml down
+	docker compose -f docker/docker-compose.prod.yml down
 
 docker-prod-logs: ## Show logs from production containers
-	timeout 30s docker compose -f docker-compose.prod.yml logs -f || docker compose -f docker-compose.prod.yml logs --tail 50
+	timeout 30s docker compose -f docker/docker-compose.prod.yml logs -f || docker compose -f docker/docker-compose.prod.yml logs --tail 50
 
 help: ## Displays these usage instructions.
 	@echo "Usage: make <target(s)>"

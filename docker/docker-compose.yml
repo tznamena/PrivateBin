@@ -1,14 +1,14 @@
 services:
   privatebin-dev:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: docker/Dockerfile
       target: development
     ports:
       - "8080:8080"
     volumes:
       # Mount source code for live development
-      - .:/var/www/html:cached
+      - ..:/var/www/html:cached
       # Separate volume for node_modules to avoid conflicts
       - /var/www/html/js/node_modules
       # Persistent data storage
@@ -43,7 +43,7 @@ services:
       - "3306:3306"
     volumes:
       - mysql_dev_data:/var/lib/mysql
-      - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ./mysql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     networks:
       - privatebin_network
     command: --default-authentication-plugin=mysql_native_password
