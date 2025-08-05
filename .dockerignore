@@ -1,0 +1,78 @@
+# Git files
+.git
+.gitignore
+.gitattributes
+
+# Documentation
+README.md
+CHANGELOG.md
+CREDITS.md
+LICENSE.md
+SECURITY.md
+CODE_OF_CONDUCT.md
+BADGES.md
+PLAN.md
+doc/
+
+# Development files
+.devcontainer/
+.vscode/
+.editorconfig
+
+# Testing files
+tst/
+*.log
+
+# Node.js
+js/node_modules/
+js/test/
+js/.nyc_output/
+js/coverage/
+npm-debug.log*
+
+# PHP
+vendor/
+composer.lock
+
+# IDE files
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Docker files (don't copy into image)
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# CI/CD files
+.github/
+.scrutinizer.yml
+.styleci.yml
+.codeclimate.yml
+codacy-analysis.yml
+crowdin.yml
+
+# Linting files
+.eslintrc
+.eslintignore
+.jshintrc
+.csslintrc
+.nsprc
+.php_cs
+
+# Temporary files
+*.tmp
+*.temp
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Coverage reports
+coverage/
+.nyc_output/

@@ -1,0 +1,106 @@
+services:
+  privatebin-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    ports:
+      - "8080:8080"
+    volumes:
+      # Mount source code for live development
+      - .:/var/www/html:cached
+      # Separate volume for node_modules to avoid conflicts
+      - /var/www/html/js/node_modules
+      # Persistent data storage
+      - privatebin_data:/var/www/html/data
+      # Persistent vendor directory to avoid reinstalling on every start
+      - privatebin_vendor:/var/www/html/vendor
+    environment:
+      - XDEBUG_MODE=debug,coverage
+      - XDEBUG_CONFIG=client_host=host.docker.internal client_port=9003
+      - PHP_IDE_CONFIG=serverName=privatebin-dev
+    networks:
+      - privatebin_network
+    depends_on:
+      - mysql-dev
+      - redis-dev
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # MySQL database for testing database storage
+  mysql-dev:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: privatebin_dev
+      MYSQL_USER: privatebin
+      MYSQL_PASSWORD: privatebin_dev_pass
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_dev_data:/var/lib/mysql
+      - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - privatebin_network
+    command: --default-authentication-plugin=mysql_native_password
+
+  # Redis for session storage and caching (optional)
+  redis-dev:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_dev_data:/data
+    networks:
+      - privatebin_network
+    command: redis-server --appendonly yes
+
+  # MinIO for S3-compatible storage testing
+  minio-dev:
+    image: minio/minio:latest
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - minio_dev_data:/data
+    networks:
+      - privatebin_network
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  # Adminer for database management
+  adminer:
+    image: adminer:latest
+    ports:
+      - "8081:8080"
+    networks:
+      - privatebin_network
+    environment:
+      ADMINER_DEFAULT_SERVER: mysql-dev
+
+volumes:
+  privatebin_data:
+    driver: local
+  privatebin_vendor:
+    driver: local
+  mysql_dev_data:
+    driver: local
+  redis_dev_data:
+    driver: local
+  minio_dev_data:
+    driver: local
+
+networks:
+  privatebin_network:
+    driver: bridge
