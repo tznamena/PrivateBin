@@ -1,8 +1,8 @@
 services:
   privatebin:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: docker/Dockerfile
       target: production
     ports:
       - "80:80"
@@ -10,7 +10,7 @@ services:
       # Persistent data storage
       - privatebin_data:/var/www/html/data
       # Configuration override (optional)
-      - ./cfg/conf.php:/var/www/html/cfg/conf.php:ro
+      - ../cfg/conf.php:/var/www/html/cfg/conf.php:ro
     environment:
       # PrivateBin configuration via environment variables
       - PRIVATEBIN_NAME=${PRIVATEBIN_NAME:-PrivateBin}
@@ -59,7 +59,7 @@ services:
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     volumes:
       - mysql_data:/var/lib/mysql
-      - ./docker/mysql/init-prod.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ./mysql/init-prod.sql:/docker-entrypoint-initdb.d/init.sql:ro
     networks:
       - privatebin_network
     restart: unless-stopped
@@ -77,8 +77,8 @@ services:
       - "443:443"
       - "80:80"
     volumes:
-      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./docker/nginx/ssl:/etc/nginx/ssl:ro
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
     networks:
       - privatebin_network
     restart: unless-stopped
