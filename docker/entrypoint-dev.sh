@@ -39,14 +39,16 @@ if [ -f /var/www/html/js/package.json ]; then
     echo "Installing JavaScript dependencies..."
     cd /var/www/html/js
     npm install
+    
+    # Install additional development dependencies for testing
+    echo "Installing additional JavaScript testing dependencies..."
+    npm install --save-dev mocha@^10.0.0 nyc@^15.0.0
     cd /var/www/html
 fi
 
-# Install global development tools
-if ! command -v nyc &> /dev/null; then
-    echo "Installing global development tools..."
-    npm install --global nyc mocha
-fi
+# Install additional PHP development dependencies for comprehensive testing
+echo "Installing additional PHP testing dependencies..."
+composer require --dev google/cloud-storage aws/aws-sdk-php --ignore-platform-reqs --no-interaction
 
 echo "Starting Apache server on port 8080..."
 echo "PrivateBin development environment ready!"
