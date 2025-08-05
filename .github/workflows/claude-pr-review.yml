@@ -12,12 +12,23 @@ permissions:
 
 jobs:
   claude-response:
+    if: |
+      github.event.pull_request.user.login == 'thenets'
     runs-on: ubuntu-latest
     steps:
       - uses: anthropics/claude-code-action@beta
         with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          # Optional: customize trigger phrase (default: @claude)
-          trigger_phrase: "/claude"
-          # Optional: add assignee trigger for issues
-          # assignee_trigger: "claude"
+          use_sticky_comment: true
+          override_prompt: |
+            Analyze PR #$PR_NUMBER in $REPOSITORY for security vulnerabilities.
+
+            Changed files:
+            $CHANGED_FILES
+
+            Focus on:
+            - SQL injection risks
+            - XSS vulnerabilities
+            - Authentication bypasses
+            - Exposed secrets or credentials
+
+            Provide severity ratings (Critical/High/Medium/Low) for any issues found.
