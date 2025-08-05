@@ -8,7 +8,7 @@ services:
       - "8080:8080"
     volumes:
       # Mount source code for live development
-      - ..:/var/www/html:cached
+      - ..:/var/www/html:ro
       # Separate volume for node_modules to avoid conflicts
       - /var/www/html/js/node_modules
       # Persistent data storage
