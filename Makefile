@@ -14,10 +14,10 @@ composer: ## Update composer dependencies (only production ones, optimize the au
 coverage: coverage-js coverage-php ## Run all unit tests and generate code coverage reports.
 
 coverage-js: ## Run JS unit tests and generate code coverage reports.
-	cd js && nyc mocha
+	cd js && npx nyc mocha
 
 coverage-php: ## Run PHP unit tests and generate code coverage reports.
-	cd tst && XDEBUG_MODE=coverage phpunit 2> /dev/null
+	cd tst && XDEBUG_MODE=coverage ../vendor/bin/phpunit 2> /dev/null
 	cd tst/log/php-coverage-report && sed -i "s#$(CURDIR)/##g" *.html */*.html
 
 doc: doc-js doc-php ## Generate all code documentation.
@@ -44,10 +44,10 @@ sign: ## Sign a release.
 test: test-js test-php ## Run all unit tests.
 
 test-js: ## Run JS unit tests.
-	cd js && mocha
+	cd js && npx mocha
 
 test-php: ## Run PHP unit tests.
-	cd tst && phpunit --no-coverage
+	cd tst && XDEBUG_MODE=off ../vendor/bin/phpunit --no-coverage
 
 # Docker Development Targets
 docker-build: ## Build the development Docker image
