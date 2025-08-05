@@ -1,0 +1,114 @@
+services:
+  privatebin:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    ports:
+      - "80:80"
+    volumes:
+      # Persistent data storage
+      - privatebin_data:/var/www/html/data
+      # Configuration override (optional)
+      - ./cfg/conf.php:/var/www/html/cfg/conf.php:ro
+    environment:
+      # PrivateBin configuration via environment variables
+      - PRIVATEBIN_NAME=${PRIVATEBIN_NAME:-PrivateBin}
+      - PRIVATEBIN_BASEPATH=${PRIVATEBIN_BASEPATH:-https://paste.example.com/}
+      
+      # Database configuration (uncomment to use database storage)
+      # - PRIVATEBIN_DB_TYPE=mysql
+      # - PRIVATEBIN_DB_HOST=mysql
+      # - PRIVATEBIN_DB_NAME=privatebin
+      # - PRIVATEBIN_DB_USER=privatebin
+      # - PRIVATEBIN_DB_PASS=${MYSQL_PASSWORD}
+      # - PRIVATEBIN_DB_PREFIX=pb_
+      
+      # S3 Storage configuration (uncomment to use S3 storage)
+      # - PRIVATEBIN_STORAGE=S3Storage
+      # - PRIVATEBIN_S3_ENDPOINT=${S3_ENDPOINT}
+      # - PRIVATEBIN_S3_REGION=${S3_REGION}
+      # - PRIVATEBIN_S3_BUCKET=${S3_BUCKET}
+      # - PRIVATEBIN_S3_ACCESS_KEY=${S3_ACCESS_KEY}
+      # - PRIVATEBIN_S3_SECRET_KEY=${S3_SECRET_KEY}
+    networks:
+      - privatebin_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    depends_on:
+      - mysql
+    # Uncomment for read-only root filesystem (advanced security)
+    # read_only: true
+    # tmpfs:
+    #   - /tmp
+    #   - /var/run
+    #   - /var/lock
+
+  # Production MySQL database
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-privatebin}
+      MYSQL_USER: ${MYSQL_USER:-privatebin}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./docker/mysql/init-prod.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - privatebin_network
+    restart: unless-stopped
+    command: --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Nginx reverse proxy with SSL termination
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "443:443"
+      - "80:80"
+    volumes:
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/nginx/ssl:/etc/nginx/ssl:ro
+    networks:
+      - privatebin_network
+    restart: unless-stopped
+    depends_on:
+      - privatebin
+
+  # Redis for session storage (optional)
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis_data:/data
+    networks:
+      - privatebin_network
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+
+volumes:
+  privatebin_data:
+    driver: local
+  mysql_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  privatebin_network:
+    driver: bridge
+
+# For production deployment with external networks:
+# networks:
+#   privatebin_network:
+#     external: true
+#     name: web_network
