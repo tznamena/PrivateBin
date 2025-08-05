@@ -44,9 +44,10 @@ composer.lock
 Thumbs.db
 
 # Docker files (don't copy into image)
-Dockerfile*
-docker-compose*.yml
-.dockerignore
+docker/
+!docker/entrypoint-*.sh
+!docker/apache/
+!docker/mysql/
 
 # CI/CD files
 .github/

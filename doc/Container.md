@@ -82,12 +82,12 @@ The development environment includes:
 
 ```
 PrivateBin/
-├── Dockerfile                      # Multi-stage container definition
-├── docker-compose.yml             # Development environment
-├── docker-compose.prod.yml        # Production environment
-├── .dockerignore                  # Files excluded from build context
-├── docker.env.example            # Environment variables template
-├── docker/                       # Container configuration
+├── docker/                       # Container configuration directory
+│   ├── Dockerfile                # Multi-stage container definition
+│   ├── docker-compose.yml        # Development environment
+│   ├── docker-compose.prod.yml   # Production environment
+│   ├── .dockerignore             # Files excluded from build context
+│   ├── docker.env.example        # Environment variables template
 │   ├── apache/                   # Apache configurations
 │   │   ├── privatebin.conf       # Development Apache config
 │   │   └── privatebin-prod.conf  # Production Apache config
