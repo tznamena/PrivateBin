@@ -8,7 +8,10 @@ services:
       - "8080:8080"
     volumes:
       # Mount source code for live development
-      - ..:/var/www/html:ro
+      - ..:/var/www/html:z
+      # Mount cfg directory as read-only to prevent accidental changes
+      - ../cfg:/var/www/html/cfg_original:z
+      - /var/www/html/cfg
       # Separate volume for node_modules to avoid conflicts
       - /var/www/html/js/node_modules
       # Persistent data storage

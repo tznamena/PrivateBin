@@ -6,7 +6,7 @@ echo "PrivateBin Development Environment Starting..."
 # Set up configuration if not exists
 if [ ! -f /var/www/html/cfg/conf.php ]; then
     echo "Creating development configuration..."
-    cp /var/www/html/cfg/conf.sample.php /var/www/html/cfg/conf.php
+    cp /var/www/html/cfg_original/conf.sample.php /var/www/html/cfg/conf.php
     
     # Enable development-friendly settings
     sed -i 's/;discussion = true/discussion = true/' /var/www/html/cfg/conf.php
