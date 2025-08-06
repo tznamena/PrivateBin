@@ -6,6 +6,9 @@ VERSION_FILES = README.md SECURITY.md doc/Installation.md js/package*.json lib/C
 REGEX_CURRENT_VERSION := $(shell echo $(CURRENT_VERSION) | sed "s/\./\\\./g")
 REGEX_VERSION := $(shell echo $(VERSION) | sed "s/\./\\\./g")
 
+# Use podman if available, otherwise use docker
+CONTAINER_RUNTIME ?= $(shell command -v podman >/dev/null 2>&1 && echo podman || echo docker)
+
 all: coverage doc ## Equivalent to running `make coverage doc`.
 
 composer: ## Update composer dependencies (only production ones, optimize the autoloader)
@@ -51,53 +54,55 @@ test-php: ## Run PHP unit tests.
 
 # Docker Development Targets
 docker-build: ## Build the development Docker image
-	docker compose -f docker/docker-compose.yml build privatebin-dev
+	${CONTAINER_RUNTIME} compose -f docker/docker-compose.yml build privatebin-dev
 
-docker-dev: ## Start development environment with live reload
-	docker compose -f docker/docker-compose.yml up -d
+docker-dev: docker-build ## Start development environment with live reload
+	${CONTAINER_RUNTIME} compose -f docker/docker-compose.yml up -d
+	@echo "Waiting for privatebin-dev container to be running..."
+	@timeout 60 bash -c 'until [ "$$(${CONTAINER_RUNTIME} compose -f docker/docker-compose.yml ps -q privatebin-dev | xargs -r docker inspect -f "{{.State.Running}}" 2>/dev/null)" = "true" ]; do sleep 1; done'
+	@echo "privatebin-dev container is running."
 	@echo "PrivateBin development environment started!"
 	@echo "Access the application at: http://localhost:8080"
 	@echo "Database admin (Adminer) at: http://localhost:8081"
 	@echo "MinIO console at: http://localhost:9001"
 
-docker-test: ## Run all tests in Docker container
-	docker compose -f docker/docker-compose.yml exec privatebin-dev make test
+docker-test: docker-dev docker-test-php docker-test-js ## Run all tests in Docker container
 
-docker-test-php: ## Run PHP unit tests in Docker container
-	docker compose -f docker/docker-compose.yml exec privatebin-dev make test-php
+docker-test-php: docker-dev ## Run PHP unit tests in Docker container
+	${CONTAINER_RUNTIME} compose -f docker/docker-compose.yml exec privatebin-dev make test-php
 
-docker-test-js: ## Run JavaScript unit tests in Docker container
-	docker compose -f docker/docker-compose.yml exec privatebin-dev make test-js
+docker-test-js: docker-dev ## Run JavaScript unit tests in Docker container
+	${CONTAINER_RUNTIME} compose -f docker/docker-compose.yml exec privatebin-dev make test-js
 
 docker-coverage: ## Generate coverage reports in Docker container
-	docker compose -f docker/docker-compose.yml exec privatebin-dev make coverage
+	${CONTAINER_RUNTIME} compose -f docker/docker-compose.yml exec privatebin-dev make coverage
 
 docker-shell: ## Open shell in running development container
-	docker compose -f docker/docker-compose.yml exec privatebin-dev bash
+	${CONTAINER_RUNTIME} compose -f docker/docker-compose.yml exec privatebin-dev bash
 
 docker-logs: ## Show logs from development containers
-	timeout 30s docker compose -f docker/docker-compose.yml logs -f || docker compose -f docker/docker-compose.yml logs --tail 50
+	timeout 30s ${CONTAINER_RUNTIME} compose -f docker/docker-compose.yml logs -f || ${CONTAINER_RUNTIME} compose -f docker/docker-compose.yml logs --tail 50
 
 docker-stop: ## Stop development environment
-	docker compose -f docker/docker-compose.yml down
+	${CONTAINER_RUNTIME} compose -f docker/docker-compose.yml down
 
 docker-restart: ## Restart development environment
-	docker compose -f docker/docker-compose.yml restart privatebin-dev
+	${CONTAINER_RUNTIME} compose -f docker/docker-compose.yml restart privatebin-dev
 
 docker-clean: ## Clean up Docker containers, images and volumes
-	docker compose -f docker/docker-compose.yml down -v --rmi all
+	${CONTAINER_RUNTIME} compose -f docker/docker-compose.yml down -v --rmi all
 	docker system prune -f
 
 docker-prod: ## Build and start production environment
-	docker compose -f docker/docker-compose.prod.yml up -d --build
+	${CONTAINER_RUNTIME} compose -f docker/docker-compose.prod.yml up -d --build
 	@echo "PrivateBin production environment started!"
 	@echo "Access the application at: http://localhost"
 
 docker-prod-stop: ## Stop production environment
-	docker compose -f docker/docker-compose.prod.yml down
+	${CONTAINER_RUNTIME} compose -f docker/docker-compose.prod.yml down
 
 docker-prod-logs: ## Show logs from production containers
-	timeout 30s docker compose -f docker/docker-compose.prod.yml logs -f || docker compose -f docker/docker-compose.prod.yml logs --tail 50
+	timeout 30s ${CONTAINER_RUNTIME} compose -f docker/docker-compose.prod.yml logs -f || ${CONTAINER_RUNTIME} compose -f docker/docker-compose.prod.yml logs --tail 50
 
 help: ## Displays these usage instructions.
 	@echo "Usage: make <target(s)>"
