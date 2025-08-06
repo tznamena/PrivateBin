@@ -22,6 +22,7 @@ jobs:
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           timeout_minutes: "2"
+          use_sticky_comment: true
           direct_prompt: |
             Please review this pull request and provide comprehensive feedback.
 
