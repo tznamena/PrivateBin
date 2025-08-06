@@ -1,0 +1,25 @@
+name: Claude comment watcher
+
+on:
+  # Events for tag mode
+  issue_comment:
+    types: [created]
+
+jobs:
+  # Tag Mode (Default) - Traditional implementation
+  tag-mode-example:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      id-token: write
+    steps:
+      - uses: anthropics/claude-code-action@beta
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          # Tag mode (default) behavior:
+          # - Scans for @claude mentions in comments, issues, and PRs
+          # - Only acts when trigger phrase is found
+          # - Creates tracking comments with progress checkboxes
+          # - Perfect for: Interactive Q&A, on-demand code changes
