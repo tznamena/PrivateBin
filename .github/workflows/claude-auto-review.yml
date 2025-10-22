@@ -6,6 +6,7 @@ on:
 
 jobs:
   auto-review:
+    if: vars.CLAUDE_ENABLED == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -17,7 +18,7 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Automatic PR Review
+      - name: Automatic PR Review by Claude
         uses: anthropics/claude-code-action@beta
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
