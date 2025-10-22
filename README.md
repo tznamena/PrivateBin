@@ -1,5 +1,7 @@
 # [![PrivateBin](https://cdn.rawgit.com/PrivateBin/assets/master/images/preview/logoSmall.png)](https://privatebin.info/)
 
+**ONLY FOR TESTING, NO REAL DEVELOPMENT DONE HERE**
+
 *Current version: 2.0.0*
 
 **PrivateBin** is a minimalist, open source online
