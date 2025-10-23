@@ -5,7 +5,7 @@ on:
     types: [opened, synchronize]
 
 jobs:
-  auto-review:
+  code-review-by-claude:
     if: vars.CLAUDE_ENABLED == 'true'
     runs-on: ubuntu-latest
     permissions:
