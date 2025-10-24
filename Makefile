@@ -1,10 +1,13 @@
-.PHONY: all coverage coverage-js coverage-php doc doc-js doc-php increment sign test test-js test-php help
+.PHONY: all coverage coverage-js coverage-php doc doc-js doc-php increment sign test test-js test-php help docker-build docker-dev docker-test docker-shell docker-clean docker-prod docker-logs docker-stop docker-restart
 
 CURRENT_VERSION = 2.0.0
 VERSION ?= 2.0.1
 VERSION_FILES = README.md SECURITY.md doc/Installation.md js/package*.json lib/Controller.php Makefile
 REGEX_CURRENT_VERSION := $(shell echo $(CURRENT_VERSION) | sed "s/\./\\\./g")
 REGEX_VERSION := $(shell echo $(VERSION) | sed "s/\./\\\./g")
+
+# Use podman if available, otherwise use docker
+CONTAINER_RUNTIME ?= $(shell command -v podman >/dev/null 2>&1 && echo podman || echo docker)
 
 all: coverage doc ## Equivalent to running `make coverage doc`.
 
@@ -14,10 +17,10 @@ composer: ## Update composer dependencies (only production ones, optimize the au
 coverage: coverage-js coverage-php ## Run all unit tests and generate code coverage reports.
 
 coverage-js: ## Run JS unit tests and generate code coverage reports.
-	cd js && nyc mocha
+	cd js && npx nyc mocha
 
 coverage-php: ## Run PHP unit tests and generate code coverage reports.
-	cd tst && XDEBUG_MODE=coverage phpunit 2> /dev/null
+	cd tst && XDEBUG_MODE=coverage ../vendor/bin/phpunit 2> /dev/null
 	cd tst/log/php-coverage-report && sed -i "s#$(CURDIR)/##g" *.html */*.html
 
 doc: doc-js doc-php ## Generate all code documentation.
@@ -44,13 +47,65 @@ sign: ## Sign a release.
 test: test-js test-php ## Run all unit tests.
 
 test-js: ## Run JS unit tests.
-	cd js && mocha
+	cd js && npx mocha
 
 test-php: ## Run PHP unit tests.
-	cd tst && phpunit --no-coverage
+	cd tst && XDEBUG_MODE=off ../vendor/bin/phpunit --no-coverage
+
+# Docker Development Targets
+docker-build: ## Build the development Docker image
+	${CONTAINER_RUNTIME} compose -f docker/docker-compose.yml build privatebin-dev
+
+docker-dev: docker-build ## Start development environment with live reload
+	${CONTAINER_RUNTIME} compose -f docker/docker-compose.yml up -d
+	@echo "Waiting for privatebin-dev container to be running..."
+	@timeout 60 bash -c 'until [ "$$(${CONTAINER_RUNTIME} compose -f docker/docker-compose.yml ps -q privatebin-dev | xargs -r docker inspect -f "{{.State.Running}}" 2>/dev/null)" = "true" ]; do sleep 1; done'
+	@echo "privatebin-dev container is running."
+	@echo "PrivateBin development environment started!"
+	@echo "Access the application at: http://localhost:8080"
+	@echo "Database admin (Adminer) at: http://localhost:8081"
+	@echo "MinIO console at: http://localhost:9001"
+
+docker-test: docker-dev docker-test-php docker-test-js ## Run all tests in Docker container
+
+docker-test-php: docker-dev ## Run PHP unit tests in Docker container
+	${CONTAINER_RUNTIME} compose -f docker/docker-compose.yml exec privatebin-dev make test-php
+
+docker-test-js: docker-dev ## Run JavaScript unit tests in Docker container
+	${CONTAINER_RUNTIME} compose -f docker/docker-compose.yml exec privatebin-dev make test-js
+
+docker-coverage: ## Generate coverage reports in Docker container
+	${CONTAINER_RUNTIME} compose -f docker/docker-compose.yml exec privatebin-dev make coverage
+
+docker-shell: ## Open shell in running development container
+	${CONTAINER_RUNTIME} compose -f docker/docker-compose.yml exec privatebin-dev bash
+
+docker-logs: ## Show logs from development containers
+	timeout 30s ${CONTAINER_RUNTIME} compose -f docker/docker-compose.yml logs -f || ${CONTAINER_RUNTIME} compose -f docker/docker-compose.yml logs --tail 50
+
+docker-stop: ## Stop development environment
+	${CONTAINER_RUNTIME} compose -f docker/docker-compose.yml down
+
+docker-restart: ## Restart development environment
+	${CONTAINER_RUNTIME} compose -f docker/docker-compose.yml restart privatebin-dev
+
+docker-clean: ## Clean up Docker containers, images and volumes
+	${CONTAINER_RUNTIME} compose -f docker/docker-compose.yml down -v --rmi all
+	docker system prune -f
+
+docker-prod: ## Build and start production environment
+	${CONTAINER_RUNTIME} compose -f docker/docker-compose.prod.yml up -d --build
+	@echo "PrivateBin production environment started!"
+	@echo "Access the application at: http://localhost"
+
+docker-prod-stop: ## Stop production environment
+	${CONTAINER_RUNTIME} compose -f docker/docker-compose.prod.yml down
+
+docker-prod-logs: ## Show logs from production containers
+	timeout 30s ${CONTAINER_RUNTIME} compose -f docker/docker-compose.prod.yml logs -f || ${CONTAINER_RUNTIME} compose -f docker/docker-compose.prod.yml logs --tail 50
 
 help: ## Displays these usage instructions.
 	@echo "Usage: make <target(s)>"
 	@echo
 	@echo "Specify one or multiple of the following targets and they will be processed in the given order:"
-	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "%-16s%s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "%-20s%s\n", $$1, $$2}' $(MAKEFILE_LIST)
