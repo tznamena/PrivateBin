@@ -12,6 +12,8 @@ jobs:
       contents: read
       pull-requests: write
     steps:
+      - run: echo "event name is:" ${{ github.event_name }} 
+      - run: echo "event type is:" ${{ github.event.action }}
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
@@ -36,7 +38,7 @@ jobs:
           Objectives:
           1) Re-check existing review comments and reply resolved when addressed
           2) Review the current PR diff and flag only clear, high-severity issues
-          3) Leave very short inline comments (1-2 sentences) on changed lines only and a brief summary at the end
+          3) Leave very short inline comments (1-2 sentences) on changed lines only
 
           Procedure:
           - Get existing comments: gh pr view --json comments
@@ -46,11 +48,11 @@ jobs:
 
           Commenting rules:
           - Max 10 inline comments total; prioritize the most critical issues
-          - One issue per comment; place on the exact changed line
-          - Natural tone, specific and actionable; do not mention automated or high-confidence
+          - One issue per comment; place on the exact changed line and include the diff
+          - Natural tone, very specific and actionable; do not mention automated or high-confidence
           - Use emojis: 🚨 Critical 🔒 Security ⚡ Performance ⚠️ Logic ✅ Resolved ✨ Improvement
 
           Submission:
-          - Submit one review containing inline comments plus a concise summary
+          - Submit one review containing inline comments
           - Use only: gh pr review --comment
           - Do not use: gh pr review --approve or --request-changes"
