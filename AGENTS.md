@@ -88,10 +88,8 @@ Following are instructions for handling pull request code review request:
    - Get diff: gh pr diff
    - If a previously reported issue appears fixed by nearby changes, reply: ✅ This issue appears to be resolved by the recent changes
    - Avoid duplicates: skip if similar feedback already exists on or near the same lines  
-   - Run `git fetch origin` and check out the remote branches (`origin/feature/x`, `origin/develop`) to ensure you have the 
 
-3. Evaluate the changes:
-   For each new or changed file, evaluate the changes in the context of the existing codebase. Understand how the modified code interacts with surrounding logic and related files—such as how input variables are derived, how return values are consumed, and whether the change introduces side effects or breaks assumptions elsewhere. Assess each change against the following principles:
+3. For each new or changed file, evaluate the changes in the context of the existing codebase. Understand how the modified code interacts with surrounding logic and related files—such as how input variables are derived, how return values are consumed, and whether the change introduces side effects or breaks assumptions elsewhere. Assess each change against the following principles:
    - **Design & Architecture**: Verify the change fits your system’s architectural patterns, avoids unnecessary coupling or speculative features, enforces clear separation of concerns, and aligns with defined module boundaries.
    - **Complexity & Maintainability**: Ensure control flow remains flat, cyclomatic complexity stays low, duplicate logic is abstracted (DRY), dead or unreachable code is removed, and any dense logic is refactored into testable helper methods.
    - **Functionality & Correctness**: Confirm new code paths behave correctly under valid and invalid inputs, cover all edge cases, maintain idempotency for retry-safe operations, satisfy all functional requirements or user stories, and include robust error-handling semantics.
@@ -113,11 +111,10 @@ Following are instructions for handling pull request code review request:
      - Issue: [One-line summary of the root problem]  
      - Fix: [Concise suggested change or code snippet]  
 
-5. Produce a section listing issues gropped by priority:
-   Title this section `## Prioritized Issues` and present all bullets from step 3 grouped by severity in this order-Critical, Major, Minor, Enhancement-with no extra prose:
+5. Produce a section titled `## Prioritized Issues` listing issues grouped by priority. Present all bullets from step 3 grouped by severity in the order listed below with no extra prose:
 
    - ### Critical
-  
+
    - ### Major
 
    - ### Minor
