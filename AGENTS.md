@@ -109,7 +109,12 @@ Following are instructions for handling pull request code review request:
    For each validated issue, output a nested bullet like this:  
    - File: `<path>:<line-range>`  
      - Issue: [One-line summary of the root problem]  
-     - Fix: [Concise suggested change or code snippet]  
+     - Fix: [Concise suggested change or code snippet]
+  
+       ```diff
+       -[existing lines]
+       +[suggested lines]
+       ```
 
 5. Produce a section titled `## Prioritized Issues` listing issues grouped by priority. Present all bullets from step 3 grouped by severity in the order listed below with no extra prose:
 
