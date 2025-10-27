@@ -77,7 +77,7 @@ PrivateBin/
 
 ## Pull request review
 
-Following are instructions for handling code review request:
+Following are instructions for handling pull request code review request:
 
 1. In 2–3 sentences, describe a high level summary of changes in the pull request:  
    – **Product impact**: What does this change deliver for users or customers?  
